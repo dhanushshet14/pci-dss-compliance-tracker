@@ -45,7 +45,34 @@ class GroqClient:
             except Exception as e:
                 logger.error(f"Groq API error on attempt {attempt + 1}: {str(e)}")
                 if attempt < retries - 1:
-                    time.sleep(2 ** attempt)  # backoff: 1s, 2s, 4s
+                    time.sleep(2 ** attempt)
                 else:
                     logger.error("All retries failed")
                     return None
+
+    def call_stream(self, prompt: str, temperature: float = 0.3):
+        try:
+            logger.info("Groq streaming API call started")
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a PCI-DSS compliance expert. Always respond in valid JSON only."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=temperature,
+                max_tokens=1000,
+                stream=True
+            )
+            for chunk in stream:
+                token = chunk.choices[0].delta.content
+                if token:
+                    yield token
+        except Exception as e:
+            logger.error(f"Groq streaming error: {str(e)}")
+            yield None

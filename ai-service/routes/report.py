@@ -1,6 +1,6 @@
 import json
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, stream_with_context
 from services.groq_client import GroqClient
 from datetime import datetime, timezone
 
@@ -41,9 +41,9 @@ def validate_input(data):
         return None, "Field 'input' must not exceed 2000 characters"
     return data["input"].strip(), None
 
+# ── Standard JSON endpoint ──────────────────────────────
 @report_bp.route("/generate-report", methods=["POST"])
 def generate_report():
-    # Step 1 — Validate input
     data = request.get_json(silent=True)
     input_text, error = validate_input(data)
 
@@ -54,31 +54,25 @@ def generate_report():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 400
 
-    # Step 2 — Load prompt
     try:
         prompt = load_prompt("prompts/generate_report_prompt.txt", input_text)
     except FileNotFoundError:
-        logger.error("generate_report_prompt.txt not found")
         return jsonify({"error": "Prompt template not found"}), 500
 
-    # Step 3 — Call Groq
     logger.info(f"/generate-report called with input length: {len(input_text)}")
     result = groq_client.call(prompt, temperature=0.3, max_tokens=1000)
 
     if result is None:
-        logger.error("/generate-report Groq call failed")
         return jsonify({
-            "error": "AI service unavailable. Please try again later.",
+            "error": "AI service unavailable.",
             "is_fallback": True,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 503
 
-    # Step 4 — Parse and return
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
 
-        # Validate required fields
         required = ["title", "executive_summary", "overview", "top_items", "recommendations"]
         for field in required:
             if field not in parsed:
@@ -96,3 +90,60 @@ def generate_report():
             "raw_response": result,
             "generated_at": datetime.now(timezone.utc).isoformat()
         }), 200
+
+
+# ── SSE Streaming endpoint ──────────────────────────────
+@report_bp.route("/generate-report/stream", methods=["POST"])
+def generate_report_stream():
+    data = request.get_json(silent=True)
+    input_text, error = validate_input(data)
+
+    if error:
+        logger.warning(f"/generate-report/stream validation failed: {error}")
+        return jsonify({
+            "error": error,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }), 400
+
+    try:
+        prompt = load_prompt("prompts/generate_report_prompt.txt", input_text)
+    except FileNotFoundError:
+        return jsonify({"error": "Prompt template not found"}), 500
+
+    logger.info(f"/generate-report/stream called")
+
+    def generate():
+        try:
+            # Stream tokens from Groq
+            stream = groq_client.call_stream(prompt, temperature=0.3)
+            full_response = ""
+
+            for token in stream:
+                if token:
+                    full_response += token
+                    # Send each token as SSE event
+                    yield f"data: {json.dumps({'token': token})}\n\n"
+
+            # Send final complete response
+            try:
+                cleaned = clean_and_parse(full_response)
+                parsed = json.loads(cleaned)
+                if "generated_at" not in parsed:
+                    parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
+                yield f"data: {json.dumps({'done': True, 'report': parsed})}\n\n"
+            except json.JSONDecodeError:
+                yield f"data: {json.dumps({'done': True, 'raw_response': full_response})}\n\n"
+
+        except Exception as e:
+            logger.error(f"SSE stream error: {str(e)}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
