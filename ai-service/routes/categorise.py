@@ -1,11 +1,10 @@
 import json
 import logging
 from flask import Blueprint, request, jsonify
-from services.groq_client import GroqClient
+from services.shared import groq_client
 from datetime import datetime, timezone
 
 categorise_bp = Blueprint("categorise", __name__)
-groq_client = GroqClient()
 logger = logging.getLogger(__name__)
 
 def load_prompt(input_text: str) -> str:
@@ -84,19 +83,14 @@ def categorise():
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
-
-        # Validate confidence is float between 0 and 1
         if "confidence" in parsed:
             parsed["confidence"] = float(parsed["confidence"])
             if parsed["confidence"] > 1.0:
                 parsed["confidence"] = parsed["confidence"] / 100.0
-
         if "generated_at" not in parsed:
             parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
-
         logger.info(f"/categorise completed: {parsed.get('category')}")
         return jsonify(parsed), 200
-
     except (json.JSONDecodeError, ValueError) as e:
         logger.error(f"/categorise parse error: {str(e)}")
         return jsonify({

@@ -1,11 +1,10 @@
 import json
 import logging
 from flask import Blueprint, request, jsonify
-from services.groq_client import GroqClient
+from services.shared import groq_client
 from datetime import datetime, timezone
 
 describe_bp = Blueprint("describe", __name__)
-groq_client = GroqClient()
 logger = logging.getLogger(__name__)
 
 def load_prompt(template_path: str, input_text: str) -> str:
@@ -28,10 +27,8 @@ def clean_and_parse(result: str):
 
 def validate_input(data):
     errors = []
-
     if not data:
         return None, "Request body is required"
-
     if "input" not in data:
         errors.append("Field 'input' is required")
     elif not isinstance(data["input"], str):
@@ -42,15 +39,12 @@ def validate_input(data):
         errors.append("Field 'input' must be at least 10 characters")
     elif len(data["input"].strip()) > 1000:
         errors.append("Field 'input' must not exceed 1000 characters")
-
     if errors:
         return None, errors[0]
-
     return data["input"].strip(), None
 
 @describe_bp.route("/describe", methods=["POST"])
 def describe():
-    # Step 1 — Validate input
     data = request.get_json(silent=True)
     input_text, error = validate_input(data)
 
@@ -61,14 +55,12 @@ def describe():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 400
 
-    # Step 2 — Load prompt template
     try:
         prompt = load_prompt("prompts/describe_prompt.txt", input_text)
     except FileNotFoundError:
         logger.error("describe_prompt.txt not found")
         return jsonify({"error": "Prompt template not found"}), 500
 
-    # Step 3 — Call Groq
     logger.info(f"/describe called with input length: {len(input_text)}")
     result = groq_client.call(prompt, temperature=0.3)
 
@@ -80,18 +72,13 @@ def describe():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 503
 
-    # Step 4 — Parse and return
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
-
-        # Ensure generated_at is always present
         if "generated_at" not in parsed:
             parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
-
         logger.info("/describe completed successfully")
         return jsonify(parsed), 200
-
     except json.JSONDecodeError as e:
         logger.error(f"/describe JSON parse error: {str(e)}")
         return jsonify({

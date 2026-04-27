@@ -1,11 +1,10 @@
 import json
 import logging
 from flask import Blueprint, request, jsonify, Response, stream_with_context
-from services.groq_client import GroqClient
+from services.shared import groq_client
 from datetime import datetime, timezone
 
 report_bp = Blueprint("report", __name__)
-groq_client = GroqClient()
 logger = logging.getLogger(__name__)
 
 def load_prompt(template_path: str, input_text: str) -> str:
@@ -41,7 +40,6 @@ def validate_input(data):
         return None, "Field 'input' must not exceed 2000 characters"
     return data["input"].strip(), None
 
-# ── Standard JSON endpoint ──────────────────────────────
 @report_bp.route("/generate-report", methods=["POST"])
 def generate_report():
     data = request.get_json(silent=True)
@@ -72,18 +70,14 @@ def generate_report():
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
-
         required = ["title", "executive_summary", "overview", "top_items", "recommendations"]
         for field in required:
             if field not in parsed:
                 parsed[field] = "Not available"
-
         if "generated_at" not in parsed:
             parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
-
         logger.info("/generate-report completed successfully")
         return jsonify(parsed), 200
-
     except json.JSONDecodeError as e:
         logger.error(f"/generate-report JSON parse error: {str(e)}")
         return jsonify({
@@ -91,8 +85,6 @@ def generate_report():
             "generated_at": datetime.now(timezone.utc).isoformat()
         }), 200
 
-
-# ── SSE Streaming endpoint ──────────────────────────────
 @report_bp.route("/generate-report/stream", methods=["POST"])
 def generate_report_stream():
     data = request.get_json(silent=True)
@@ -110,21 +102,16 @@ def generate_report_stream():
     except FileNotFoundError:
         return jsonify({"error": "Prompt template not found"}), 500
 
-    logger.info(f"/generate-report/stream called")
+    logger.info("/generate-report/stream called")
 
     def generate():
         try:
-            # Stream tokens from Groq
             stream = groq_client.call_stream(prompt, temperature=0.3)
             full_response = ""
-
             for token in stream:
                 if token:
                     full_response += token
-                    # Send each token as SSE event
                     yield f"data: {json.dumps({'token': token})}\n\n"
-
-            # Send final complete response
             try:
                 cleaned = clean_and_parse(full_response)
                 parsed = json.loads(cleaned)
@@ -133,7 +120,6 @@ def generate_report_stream():
                 yield f"data: {json.dumps({'done': True, 'report': parsed})}\n\n"
             except json.JSONDecodeError:
                 yield f"data: {json.dumps({'done': True, 'raw_response': full_response})}\n\n"
-
         except Exception as e:
             logger.error(f"SSE stream error: {str(e)}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

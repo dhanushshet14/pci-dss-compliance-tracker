@@ -15,6 +15,17 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 START_TIME = time.time()
+chroma_client = None
+
+def init_chroma():
+    global chroma_client
+    try:
+        from services.chroma_client import ChromaClient
+        chroma_client = ChromaClient()
+        count = chroma_client.load_documents("./docs")
+        logger.info(f"RAG pipeline ready — {chroma_client.get_doc_count()} chunks in ChromaDB")
+    except Exception as e:
+        logger.error(f"ChromaDB startup error: {str(e)}")
 
 app = Flask(__name__)
 
@@ -27,36 +38,41 @@ app.register_blueprint(batch_bp)
 
 @app.route("/")
 def home():
-    return {"message": "PCI-DSS AI Service Running", "version": "1.0.0"}
+    return {
+        "message": "PCI-DSS AI Service Running",
+        "version": "1.0.0"
+    }
 
 @app.route("/health")
 def health():
     uptime_seconds = int(time.time() - START_TIME)
     chroma_count = 0
+    cache_stats = {}
+
     try:
-        from services.chroma_client import ChromaClient
-        chroma = ChromaClient()
-        chroma_count = chroma.get_doc_count()
+        if chroma_client:
+            chroma_count = chroma_client.get_doc_count()
     except Exception:
         pass
+
+    try:
+        from services.shared import groq_client
+        cache_stats = groq_client.get_cache_stats()
+    except Exception:
+        pass
+
     return {
         "status": "ok",
         "service": "pci-dss-ai-service",
         "version": "1.0.0",
         "uptime_seconds": uptime_seconds,
         "chroma_doc_count": chroma_count,
-        "model": "llama-3.3-70b-versatile"
+        "model": "llama-3.3-70b-versatile",
+        "cache_stats": cache_stats
     }
 
-# Load ChromaDB on startup
 with app.app_context():
-    try:
-        from services.chroma_client import ChromaClient
-        chroma = ChromaClient()
-        count = chroma.load_documents("./docs")
-        logger.info(f"RAG pipeline ready — {chroma.get_doc_count()} chunks in ChromaDB")
-    except Exception as e:
-        logger.error(f"ChromaDB startup error: {str(e)}")
+    init_chroma()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

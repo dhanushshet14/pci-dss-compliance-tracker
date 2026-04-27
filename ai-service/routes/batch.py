@@ -2,15 +2,14 @@ import json
 import logging
 import time
 from flask import Blueprint, request, jsonify
-from services.groq_client import GroqClient
+from services.shared import groq_client
 from datetime import datetime, timezone
 
 batch_bp = Blueprint("batch", __name__)
-groq_client = GroqClient()
 logger = logging.getLogger(__name__)
 
 MAX_ITEMS = 20
-DELAY_BETWEEN_ITEMS = 0.1  # 100ms
+DELAY_BETWEEN_ITEMS = 0.1
 
 def clean_and_parse(result: str):
     result = result.replace("{{", "{").replace("}}", "}")
@@ -54,7 +53,6 @@ Respond ONLY in this exact JSON format with no extra text, no markdown, no code 
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
-        # Always force correct index and metadata
         parsed["item_index"] = index
         parsed["input"] = safe_item
         parsed["processed_at"] = datetime.now(timezone.utc).isoformat()
@@ -87,7 +85,6 @@ def validate_input(data):
 
 @batch_bp.route("/batch-process", methods=["POST"])
 def batch_process():
-    # Step 1 — Validate
     data = request.get_json(silent=True)
     items, error = validate_input(data)
 
@@ -100,25 +97,19 @@ def batch_process():
 
     logger.info(f"/batch-process started — {len(items)} items")
     start_time = time.time()
-
     results = []
     successful = 0
     failed = 0
 
     for index, item in enumerate(items):
-        # index + 1 so it starts from 1 not 0
         current_index = index + 1
         logger.info(f"Processing item {current_index}/{len(items)}")
-
         result = process_single_item(item.strip(), current_index)
         results.append(result)
-
         if "error" in result:
             failed += 1
         else:
             successful += 1
-
-        # 100ms delay between items
         if index < len(items) - 1:
             time.sleep(DELAY_BETWEEN_ITEMS)
 

@@ -1,11 +1,10 @@
 import json
 import logging
 from flask import Blueprint, request, jsonify
-from services.groq_client import GroqClient
+from services.shared import groq_client
 from datetime import datetime, timezone
 
 recommend_bp = Blueprint("recommend", __name__)
-groq_client = GroqClient()
 logger = logging.getLogger(__name__)
 
 def load_prompt(template_path: str, input_text: str) -> str:
@@ -43,7 +42,6 @@ def validate_input(data):
 
 @recommend_bp.route("/recommend", methods=["POST"])
 def recommend():
-    # Step 1 — Validate input
     data = request.get_json(silent=True)
     input_text, error = validate_input(data)
 
@@ -54,14 +52,12 @@ def recommend():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 400
 
-    # Step 2 — Load prompt
     try:
         prompt = load_prompt("prompts/recommend_prompt.txt", input_text)
     except FileNotFoundError:
         logger.error("recommend_prompt.txt not found")
         return jsonify({"error": "Prompt template not found"}), 500
 
-    # Step 3 — Call Groq
     logger.info(f"/recommend called with input length: {len(input_text)}")
     result = groq_client.call(prompt, temperature=0.4)
 
@@ -73,24 +69,17 @@ def recommend():
             "timestamp": datetime.now(timezone.utc).isoformat()
         }), 503
 
-    # Step 4 — Parse and validate response
     try:
         cleaned = clean_and_parse(result)
         parsed = json.loads(cleaned)
-
-        # Ensure recommendations array exists and has 3 items
         if "recommendations" not in parsed:
             raise ValueError("Missing recommendations array")
         if len(parsed["recommendations"]) != 3:
             raise ValueError("Expected exactly 3 recommendations")
-
-        # Ensure generated_at present
         if "generated_at" not in parsed:
             parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
-
         logger.info("/recommend completed successfully")
         return jsonify(parsed), 200
-
     except (json.JSONDecodeError, ValueError) as e:
         logger.error(f"/recommend parse error: {str(e)}")
         return jsonify({
