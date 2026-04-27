@@ -1,4 +1,5 @@
 import logging
+import time
 from flask import Flask
 from routes.describe import describe_bp
 from routes.recommend import recommend_bp
@@ -7,17 +8,16 @@ from routes.report import report_bp
 from routes.analyse import analyse_bp
 from routes.batch import batch_bp
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
 logger = logging.getLogger(__name__)
+START_TIME = time.time()
 
 app = Flask(__name__)
 
-# Register all blueprints
 app.register_blueprint(describe_bp)
 app.register_blueprint(recommend_bp)
 app.register_blueprint(categorise_bp)
@@ -31,13 +31,24 @@ def home():
 
 @app.route("/health")
 def health():
+    uptime_seconds = int(time.time() - START_TIME)
+    chroma_count = 0
+    try:
+        from services.chroma_client import ChromaClient
+        chroma = ChromaClient()
+        chroma_count = chroma.get_doc_count()
+    except Exception:
+        pass
     return {
         "status": "ok",
         "service": "pci-dss-ai-service",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "uptime_seconds": uptime_seconds,
+        "chroma_doc_count": chroma_count,
+        "model": "llama-3.3-70b-versatile"
     }
 
-# Load ChromaDB documents on startup
+# Load ChromaDB on startup
 with app.app_context():
     try:
         from services.chroma_client import ChromaClient
