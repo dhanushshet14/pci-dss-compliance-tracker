@@ -1,0 +1,25 @@
+Common PCI-DSS Violations and Remediation
+
+Violation 1 — Unencrypted Cardholder Data Storage
+Many organizations store cardholder data including primary account numbers in plain text databases. This is a critical violation of Requirement 3.4. Remediation requires implementing strong encryption such as AES-256 for all stored cardholder data and implementing proper key management procedures.
+
+Violation 2 — Default Vendor Passwords
+Payment terminals and systems are frequently deployed with manufacturer default passwords still active. This violates Requirement 2.1. All default passwords must be changed immediately before deploying any system to the network.
+
+Violation 3 — Outdated Firewall Rules
+Firewall configurations that have not been reviewed in over six months frequently contain outdated or overly permissive rules. This violates Requirement 1.1. A formal review process must be established and documented.
+
+Violation 4 — Missing Patch Management
+Systems running unpatched software with known vulnerabilities are a common PCI-DSS violation under Requirement 6.1. Critical patches must be applied within one month of release. A formal patch management program must be documented.
+
+Violation 5 — Insufficient Log Retention
+Organizations retaining audit logs for less than 12 months violate Requirement 10.3. Logs must be retained for a minimum of 12 months with 3 months immediately available. Centralized log management solutions should be implemented.
+
+Violation 6 — Lack of Multi-Factor Authentication
+Systems without multi-factor authentication for remote access and privileged access violate Requirement 8.3. MFA must be implemented for all administrative access and all remote network access to the cardholder data environment.
+
+Violation 7 — No Penetration Testing
+Organizations that have never conducted penetration testing violate Requirement 11.3. Annual penetration testing by a qualified internal resource or third party is required. Test results must be documented and vulnerabilities remediated.
+
+Violation 8 — Missing Security Awareness Training
+Organizations without formal security awareness programs violate Requirement 12.3. All personnel must receive annual security awareness training. Training must cover social engineering, phishing awareness, and data handling procedures.

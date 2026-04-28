@@ -7,15 +7,10 @@ logger = logging.getLogger(__name__)
 
 class ChromaClient:
     def __init__(self):
-        # Initialize persistent ChromaDB
         self.client = chromadb.PersistentClient(path="./chroma_data")
         self.collection_name = "pci_dss_knowledge"
-
-        # Use ChromaDB default embedding function (no sentence-transformers needed)
         self.embedding_fn = embedding_functions.DefaultEmbeddingFunction()
         logger.info("ChromaDB embedding function ready")
-
-        # Get or create collection
         self.collection = self.client.get_or_create_collection(
             name=self.collection_name,
             embedding_function=self.embedding_fn,
@@ -40,35 +35,34 @@ class ChromaClient:
             logger.warning(f"Docs folder not found: {docs_folder}")
             return 0
 
-        for filename in os.listdir(docs_folder):
-            if filename.endswith(".txt"):
-                filepath = os.path.join(docs_folder, filename)
-                with open(filepath, "r", encoding="utf-8") as f:
-                    text = f.read()
+        files = [f for f in os.listdir(docs_folder) if f.endswith(".txt")]
+        logger.info(f"Found {len(files)} documents to load")
 
-                chunks = self.chunk_text(text)
-                logger.info(f"File: {filename} — {len(chunks)} chunks created")
+        for filename in files:
+            filepath = os.path.join(docs_folder, filename)
+            with open(filepath, "r", encoding="utf-8") as f:
+                text = f.read()
 
-                for i, chunk in enumerate(chunks):
-                    doc_id = f"{filename}_{i}"
+            chunks = self.chunk_text(text)
+            logger.info(f"File: {filename} — {len(chunks)} chunks created")
 
-                    # Check if already exists
-                    try:
-                        existing = self.collection.get(ids=[doc_id])
-                        if existing["ids"]:
-                            continue
-                    except Exception:
-                        pass
+            for i, chunk in enumerate(chunks):
+                doc_id = f"{filename}_{i}"
+                try:
+                    existing = self.collection.get(ids=[doc_id])
+                    if existing["ids"]:
+                        continue
+                except Exception:
+                    pass
 
-                    # Store chunk (embedding handled automatically)
-                    self.collection.add(
-                        ids=[doc_id],
-                        documents=[chunk],
-                        metadatas=[{"source": filename, "chunk_index": i}]
-                    )
-                    total_chunks += 1
+                self.collection.add(
+                    ids=[doc_id],
+                    documents=[chunk],
+                    metadatas=[{"source": filename, "chunk_index": i}]
+                )
+                total_chunks += 1
 
-        logger.info(f"Total chunks stored in ChromaDB: {total_chunks}")
+        logger.info(f"Total new chunks stored in ChromaDB: {total_chunks}")
         return total_chunks
 
     def query(self, question: str, n_results: int = 3):

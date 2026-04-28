@@ -1,0 +1,22 @@
+PCI-DSS Audit Checklist
+
+Network Security Checklist
+Verify firewall configurations have been reviewed within the last 6 months. Confirm all default vendor passwords have been changed. Verify DMZ is properly configured for all public-facing systems. Confirm all unnecessary network services and ports are disabled. Verify network diagrams are current and accurate.
+
+Data Protection Checklist
+Confirm no sensitive authentication data is stored after authorization. Verify primary account numbers are masked in all displays and reports. Confirm all stored cardholder data is encrypted with strong cryptography. Verify key management procedures are documented and tested. Confirm data retention policy defines maximum storage periods.
+
+Access Control Checklist
+Verify unique user IDs are assigned to all personnel. Confirm multi-factor authentication is enabled for all remote access. Verify terminated user accounts are removed within 24 hours. Confirm password complexity requirements meet PCI-DSS minimums. Verify principle of least privilege is applied to all system access.
+
+Monitoring and Logging Checklist
+Confirm audit logging is enabled on all systems in scope. Verify logs are retained for minimum 12 months. Confirm logs are reviewed daily using automated tools. Verify log files are protected from unauthorized modification. Confirm centralized log management is implemented.
+
+Vulnerability Management Checklist
+Verify quarterly vulnerability scans have been completed. Confirm annual penetration testing has been performed. Verify critical patches are applied within one month of release. Confirm antivirus software is current and actively running. Verify web application firewall is protecting all public-facing applications.
+
+Physical Security Checklist
+Confirm physical access to server rooms is restricted and logged. Verify visitor management procedures are in place. Confirm media containing cardholder data is stored securely. Verify CCTV cameras are monitoring all access points. Confirm media destruction procedures are documented and followed.
+
+Incident Response Checklist
+Verify incident response plan has been tested within the last year. Confirm roles and responsibilities are clearly defined. Verify communication procedures are established with card brands. Confirm forensic investigation procedures are documented. Verify post-incident review process is in place.
