@@ -86,7 +86,7 @@ public class ComplianceRecordController {
             )
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize(RoleConstants.HAS_ROLE_ADMIN_OR_MANAGER)
+    @PreAuthorize(RoleConstants.HAS_ROLE_ADMIN)
     public ResponseEntity<Void> deleteRecord(
             @Parameter(description = "UUID of the compliance record", required = true)
             @PathVariable UUID id) {
@@ -140,7 +140,7 @@ public class ComplianceRecordController {
             )
     })
     @GetMapping("/stats")
-    @PreAuthorize(RoleConstants.IS_AUTHENTICATED)
+    @PreAuthorize(RoleConstants.HAS_ROLE_ADMIN)
     public ResponseEntity<ComplianceStatsResponseDTO> getStatistics() {
 
         ComplianceStatsResponseDTO stats = complianceRecordService.getStatistics();
