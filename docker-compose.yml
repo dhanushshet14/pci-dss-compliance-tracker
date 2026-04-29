@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  # PostgreSQL 15
+  postgres:
+    image: postgres:15-alpine
+    container_name: pci-dss-postgres
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis 7
+  redis:
+    image: redis:7-alpine
+    container_name: pci-dss-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+  # Spring Boot Backend
+  backend:
+    build: ./backend
+    container_name: pci-dss-backend
+    env_file: .env
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    depends_on:
+      - postgres
+      - redis
+
+  # Flask AI Service
+  ai-service:
+    build: ./ai-service
+    container_name: pci-dss-ai-service
+    env_file: .env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - backend
+
+  # React + Vite Frontend
+  frontend:
+    build: ./frontend
+    container_name: pci-dss-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,11 +1,43 @@
+# ==================== Environment ====================
 .env
-ai-service/.env
-__pycache__/
-ai-service/__pycache__/
-ai-service/services/__pycache__/
-ai-service/routes/__pycache__/
-*.pyc
-node_modules/
+
+# ==================== Java / Maven ====================
 target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvnw
+mvnw.cmd
+
+# ==================== Python ====================
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# ==================== ChromaDB ====================
 chroma_data/
 
+# ==================== Node / React ====================
+node_modules/
+dist/
+build/
+
+# ==================== IDE ====================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
