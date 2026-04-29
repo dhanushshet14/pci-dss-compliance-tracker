@@ -1,6 +1,7 @@
 # ============================================================================
 # PCI-DSS Compliance Tracker — Application Configuration
-# All sensitive values should be injected via environment variables
+# All sensitive values should be injected via environment variables.
+# Safe defaults are provided so the app can at least START without a .env file.
 # ============================================================================
 
 server:
@@ -13,8 +14,8 @@ spring:
   # PostgreSQL Database
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pci_dss_db}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   # JPA / Hibernate
@@ -32,7 +33,7 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
-  # Redis
+  # Redis (optional — auto-config is excluded if not available)
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -43,8 +44,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:noreply@pcidss-demo.com}
+    password: ${MAIL_PASSWORD:changeme}
     properties:
       mail:
         smtp:
@@ -52,9 +53,15 @@ spring:
           starttls:
             enable: true
 
+  # Disable Redis auto-config if Redis is not available
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:pci-dss-tracker-dev-secret-key-must-be-at-least-256-bits-long-for-hmac-sha}
   expiration: ${JWT_EXPIRATION:86400000}
   expiry-seconds: ${JWT_EXPIRY_SECONDS:3600}
   refresh-expiry-seconds: ${JWT_REFRESH_EXPIRY_SECONDS:604800}
