@@ -1,0 +1,36 @@
+You are a PCI-DSS v4.0 compliance expert with 10 years of experience in payment card security auditing.
+
+Based on the following PCI-DSS compliance issue, provide exactly 3 actionable recommendations to fix or improve the compliance status.
+
+Compliance Issue: {input}
+
+Respond ONLY in this exact JSON format with no extra text, no markdown, no code fences:
+{
+    "recommendations": [
+        {
+            "action_type": "Immediate Action or Short-term Fix or Long-term Improvement",
+            "description": "Clear specific actionable step to take",
+            "priority": "Critical or High or Medium or Low",
+            "effort": "Low or Medium or High",
+            "pci_dss_requirement": "Relevant requirement number e.g. Requirement 1.2",
+            "expected_outcome": "What will be achieved by taking this action"
+        },
+        {
+            "action_type": "Immediate Action or Short-term Fix or Long-term Improvement",
+            "description": "Clear specific actionable step to take",
+            "priority": "Critical or High or Medium or Low",
+            "effort": "Low or Medium or High",
+            "pci_dss_requirement": "Relevant requirement number e.g. Requirement 1.2",
+            "expected_outcome": "What will be achieved by taking this action"
+        },
+        {
+            "action_type": "Immediate Action or Short-term Fix or Long-term Improvement",
+            "description": "Clear specific actionable step to take",
+            "priority": "Critical or High or Medium or Low",
+            "effort": "Low or Medium or High",
+            "pci_dss_requirement": "Relevant requirement number e.g. Requirement 1.2",
+            "expected_outcome": "What will be achieved by taking this action"
+        }
+    ],
+    "generated_at": "{generated_at}"
+}

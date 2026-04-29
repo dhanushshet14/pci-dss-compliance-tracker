@@ -1,0 +1,22 @@
+PCI-DSS Requirements 9 and 10 — Physical Security and Monitoring
+
+Requirement 9.1 — Physical Access Controls
+Appropriate facility entry controls must be in place to limit and monitor physical access to systems in the cardholder data environment. Video cameras or access control mechanisms must be used to monitor individual physical access to sensitive areas.
+
+Requirement 9.2 — Visitor Management
+Procedures must exist to distinguish between on-site personnel and visitors. Visitors must be authorized before entering areas where cardholder data is processed or maintained. Visitor badges must be surrendered before leaving the facility.
+
+Requirement 9.3 — Media Handling
+All media containing cardholder data must be physically secured. Media must be classified so the sensitivity of the data can be determined. Media must be destroyed when no longer needed for business or legal reasons.
+
+Requirement 10.1 — Audit Logs
+Audit logs must be implemented to link all access to system components to each individual user. Logs must capture user identification, date and time of event, type of event, and data accessed.
+
+Requirement 10.2 — Log Requirements
+Logs must capture all individual user access to cardholder data, all actions taken by any individual with root or administrative privileges, and all access to audit trails. All invalid logical access attempts must be logged.
+
+Requirement 10.3 — Log Protection
+Audit trail files must be protected to prevent modifications. Logs must be immediately backed up to a centralized log server. Logs must be retained for at least 12 months with at least the most recent 3 months available for immediate analysis.
+
+Requirement 10.4 — Log Review
+All security events must be reviewed daily. Log review must include systems that perform security functions such as intrusion detection systems and authentication servers. Automated log review tools are strongly recommended.

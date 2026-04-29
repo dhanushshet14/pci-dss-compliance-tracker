@@ -1,0 +1,19 @@
+PCI-DSS Requirements 7 and 8 — Access Control and Authentication
+
+Requirement 7.1 — Restrict Access by Business Need
+Access to system components and cardholder data must be limited to only those individuals whose job requires such access. Access rights must be based on job classification and function. Access control systems must be in place and set to deny all unless specifically allowed.
+
+Requirement 7.2 — Access Control Systems
+Access control systems must be implemented for system components with multiple users. Access control systems must include access restriction based on need to know, granting of privileges based on individual personnel's job classification, and denial of all unless specifically allowed.
+
+Requirement 8.1 — User Identification
+A unique ID must be assigned to each person with computer access. Shared user IDs and generic accounts must not be used. User IDs and accounts for terminated users must be removed immediately.
+
+Requirement 8.2 — Authentication Management
+Authentication credentials must be properly managed. Passwords must be complex and must not be the same as the previous four passwords. Passwords must be changed every 90 days. Multi-factor authentication must be implemented for all remote access.
+
+Requirement 8.3 — Multi-Factor Authentication
+Multi-factor authentication must be implemented for all access into the cardholder data environment. This applies to all personnel including administrators. MFA must use at least two of the three authentication factors: something you know, something you have, something you are.
+
+Requirement 8.4 — Password Policy
+Passwords must be at least seven characters long and contain both numeric and alphabetic characters. Password complexity requirements must be enforced through system configuration. Accounts must be locked after not more than six invalid access attempts.

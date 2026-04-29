@@ -1,0 +1,25 @@
+PCI-DSS Requirements 11 and 12 — Testing and Security Policies
+
+Requirement 11.1 — Wireless Testing
+Processes must be implemented to test for the presence of wireless access points quarterly. All authorized and unauthorized wireless access points must be detected and identified. Unauthorized wireless access points must be addressed immediately.
+
+Requirement 11.2 — Vulnerability Scans
+Internal and external network vulnerability scans must be run at least quarterly. All high-risk vulnerabilities must be resolved and rescanned. External scans must be performed by an Approved Scanning Vendor.
+
+Requirement 11.3 — Penetration Testing
+Penetration testing methodology must be defined and implemented. Network layer penetration tests must include tests for all network components. Application layer penetration tests must include all vulnerabilities listed in PCI-DSS Requirement 6.3.
+
+Requirement 11.4 — Intrusion Detection
+Intrusion detection and prevention systems must be used to monitor all traffic at the perimeter of the cardholder data environment and at critical points inside the cardholder data environment. Intrusion detection alerts must be investigated immediately.
+
+Requirement 12.1 — Security Policy
+A security policy must be established, published, maintained, and disseminated to all relevant personnel. The policy must be reviewed at least annually and updated when the environment changes.
+
+Requirement 12.2 — Risk Assessment
+A risk assessment process must be implemented that identifies critical assets, threats, and vulnerabilities and results in a formal risk assessment. Risk assessments must be performed at least annually.
+
+Requirement 12.3 — Security Awareness
+A formal security awareness program must be implemented to make all personnel aware of the importance of cardholder data security. Personnel must be required to acknowledge that they have read and understood the security policy and procedures.
+
+Requirement 12.4 — Incident Response
+An incident response plan must be implemented and tested annually. The plan must be ready to be activated immediately in the event of a system breach. The plan must include roles and responsibilities and communication strategies.

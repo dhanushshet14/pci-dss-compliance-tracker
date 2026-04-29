@@ -1,3 +1,11 @@
 .env
+ai-service/.env
 __pycache__/
+ai-service/__pycache__/
+ai-service/services/__pycache__/
+ai-service/routes/__pycache__/
+*.pyc
 node_modules/
+target/
+chroma_data/
+

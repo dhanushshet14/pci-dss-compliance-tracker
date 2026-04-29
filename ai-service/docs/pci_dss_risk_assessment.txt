@@ -1,0 +1,16 @@
+PCI-DSS Risk Assessment Framework
+
+Risk Level Definitions
+Critical Risk indicates an immediate threat to cardholder data with potential for significant data breach. Critical findings require immediate remediation within 24 to 72 hours. Examples include unencrypted cardholder data storage and active exploitation of known vulnerabilities.
+
+High Risk indicates a significant vulnerability that could lead to unauthorized access or data exposure. High findings require remediation within 30 days. Examples include missing critical patches, weak authentication controls, and inadequate access controls.
+
+Medium Risk indicates a vulnerability that could contribute to a security incident if combined with other factors. Medium findings require remediation within 90 days. Examples include outdated firewall reviews, insufficient log retention, and missing security awareness training.
+
+Low Risk indicates a minor deviation from best practices that poses minimal immediate threat. Low findings require remediation within 180 days. Examples include documentation gaps, minor policy deficiencies, and non-critical configuration issues.
+
+Risk Assessment Process
+Step 1 involves identifying all systems, applications, and processes that store, process, or transmit cardholder data. Step 2 involves cataloguing all threats and vulnerabilities affecting these systems. Step 3 involves assessing the likelihood and impact of each threat. Step 4 involves prioritizing remediation based on risk level. Step 5 involves implementing controls and verifying their effectiveness.
+
+Common Risk Factors
+Outdated software and missing patches significantly increase the attack surface. Weak access controls allow unauthorized users to access sensitive systems. Insufficient monitoring means attacks go undetected for extended periods. Poor key management exposes encrypted data to unauthorized decryption. Inadequate vendor oversight creates third-party risk exposure.
