@@ -12,16 +12,16 @@ spring:
 
   # PostgreSQL Database
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pci_dss_db}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:pci_dss_db}
+    username: postgres
+    password: 1234
     driver-class-name: org.postgresql.Driver
 
   # JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -29,7 +29,7 @@ spring:
 
   # Flyway
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
 
   # Redis
