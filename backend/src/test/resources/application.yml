@@ -1,0 +1,60 @@
+# ============================================================================
+# Test Profile Configuration
+# Uses H2 in-memory DB, disables Flyway, Redis, and Mail
+# ============================================================================
+
+server:
+  port: 0
+
+spring:
+  application:
+    name: pci-dss-compliance-tracker-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+jwt:
+  secret: TestSecretKeyThatIsAtLeast256BitsLongForHMACSHA256Algorithm!!
+  expiration: 86400000
+  expiry-seconds: 3600
+  refresh-expiry-seconds: 604800
+
+ai-service:
+  base-url: http://localhost:5000
+
+scheduler:
+  admin-email: test@pcidss-test.com
+  cron:
+    overdue-reminder: "0 0 8 * * ?"
+    deadline-alert: "0 0 9 * * ?"
+    weekly-summary: "0 0 7 ? * MON"

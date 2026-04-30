@@ -68,6 +68,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    /**
+     * Re-throws AccessDeniedException so that Spring Security's
+     * ExceptionTranslationFilter can handle it and return 403.
+     */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public void handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) throws org.springframework.security.access.AccessDeniedException {
+        throw ex;
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         Map<String, Object> body = new LinkedHashMap<>();
