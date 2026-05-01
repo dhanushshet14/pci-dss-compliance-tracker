@@ -34,28 +34,13 @@ class GroqClient:
         self._cache = {}
         self._cache_hits = 0
         self._cache_misses = 0
-        self.CACHE_TTL = 900  # 15 minutes
+        self.CACHE_TTL = 900
 
         self._initialized = True
         logger.info("GroqClient singleton initialized")
 
     def _get_cache_key(self, prompt: str) -> str:
         return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-
-    def _build_meta(
-        self,
-        start_time: float,
-        tokens_used: int = 0,
-        cached: bool = False,
-        confidence: float = 0.85
-    ) -> dict:
-        return {
-            "confidence": confidence,
-            "model_used": self.model,
-            "tokens_used": tokens_used,
-            "response_time_ms": int((time.time() - start_time) * 1000),
-            "cached": cached
-        }
 
     def _get_from_cache(self, key: str):
         if key in self._cache:
@@ -86,84 +71,77 @@ class GroqClient:
             "cached_items": len(self._cache)
         }
 
-    def call(self, prompt: str, temperature: float = 0.3, max_tokens: int = 1000):
-        start_time = time.time()
+    def call(self, prompt, temperature=0.3):
+        start = time.time()
         cache_key = self._get_cache_key(prompt)
 
-        cached_response = self._get_from_cache(cache_key)
-        if cached_response:
-            cached_response["meta"]["cached"] = True
-            cached_response["meta"]["response_time_ms"] = int(
-                (time.time() - start_time) * 1000
-            )
-            return cached_response
+        cached = self._get_from_cache(cache_key)
+        if cached:
+            cached["meta"]["cached"] = True
+            cached["meta"]["response_time_ms"] = int((time.time() - start) * 1000)
+            return cached
 
-        retries = 3
+        try:
+            logger.info("Groq API call started")
 
-        for attempt in range(retries):
-            try:
-                logger.info(f"Groq API call attempt {attempt + 1}")
-
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a PCI-DSS compliance expert. "
-                                "Always respond in valid JSON only."
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
-
-                content = response.choices[0].message.content
-
-                tokens_used = 0
-                if hasattr(response, "usage") and response.usage:
-                    tokens_used = getattr(response.usage, "total_tokens", 0)
-
-                final_response = {
-                    "data": content,
-                    "meta": self._build_meta(
-                        start_time=start_time,
-                        tokens_used=tokens_used,
-                        cached=False,
-                        confidence=0.9
-                    )
-                }
-
-                self._set_cache(cache_key, final_response)
-
-                logger.info("Groq API call successful")
-                return final_response
-
-            except Exception as e:
-                logger.error(f"Groq API error on attempt {attempt + 1}: {str(e)}")
-
-                if attempt < retries - 1:
-                    time.sleep(2 ** attempt)
-                else:
-                    logger.error("All retries failed")
-
-                    return {
-                        "data": {
-                            "message": "AI service is temporarily unavailable.",
-                            "is_fallback": True
-                        },
-                        "meta": self._build_meta(
-                            start_time=start_time,
-                            tokens_used=0,
-                            cached=False,
-                            confidence=0.5
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a PCI-DSS compliance expert. "
+                            "Always respond in valid JSON only."
                         )
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
                     }
+                ],
+                temperature=temperature,
+                max_tokens=1000
+            )
+
+            content = response.choices[0].message.content
+            tokens = response.usage.total_tokens if response.usage else 0
+            duration = int((time.time() - start) * 1000)
+
+            result = {
+                "data": content,
+                "meta": {
+                    "confidence": 0.9,
+                    "model_used": self.model,
+                    "tokens_used": tokens,
+                    "response_time_ms": duration,
+                    "cached": False,
+                    "is_fallback": False
+                }
+            }
+
+            self._set_cache(cache_key, result)
+            return result
+
+        except Exception as e:
+            logger.error(f"Groq API error: {str(e)}")
+
+            duration = int((time.time() - start) * 1000)
+
+            return {
+                "data": {
+                    "summary": "Unable to generate response at the moment. Please try again later.",
+                    "risks": [],
+                    "recommendations": ["Retry request after some time"]
+                },
+                "meta": {
+                    "confidence": 0.2,
+                    "model_used": self.model,
+                    "tokens_used": 0,
+                    "response_time_ms": duration,
+                    "cached": False,
+                    "is_fallback": True
+                }
+            }
 
     def call_stream(self, prompt: str, temperature: float = 0.3):
         try:
