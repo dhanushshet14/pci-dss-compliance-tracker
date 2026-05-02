@@ -2,6 +2,7 @@ package com.internship.tool.controller;
 
 import com.internship.tool.service.UserService;
 import com.internship.tool.dto.UserDTO;
+import com.internship.tool.dto.ApiResponse;
 
 import jakarta.validation.Valid;
 
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 public class TestController {
@@ -22,42 +25,94 @@ public class TestController {
 
     // ✅ GET all users
     @GetMapping("/users")
-    public List<UserDTO> getUsers() {
-        return userService.getAllUsers();
+    public ApiResponse<List<UserDTO>> getUsers() {
+        List<UserDTO> users = userService.getAllUsers();
+
+        return new ApiResponse<>(
+                "success",
+                "Users fetched successfully",
+                users
+        );
     }
 
-    // ✅ PAGINATION
+    // ✅ PAGINATION (clean response)
     @GetMapping("/users/page")
-    public Page<UserDTO> getUsersWithPagination(Pageable pageable) {
-        return userService.getUsersWithPagination(pageable);
+    public ApiResponse<Map<String, Object>> getUsersWithPagination(Pageable pageable) {
+
+        Page<UserDTO> result = userService.getUsersWithPagination(pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", result.getContent());
+        response.put("totalElements", result.getTotalElements());
+        response.put("totalPages", result.getTotalPages());
+
+        return new ApiResponse<>(
+                "success",
+                "Users fetched with pagination",
+                response
+        );
     }
 
     // ✅ POST
     @PostMapping("/users")
-    public UserDTO createUser(@Valid @RequestBody UserDTO userDTO) {
-        return userService.saveUser(userDTO);
+    public ApiResponse<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+
+        UserDTO savedUser = userService.saveUser(userDTO);
+
+        return new ApiResponse<>(
+                "success",
+                "User created successfully",
+                savedUser
+        );
     }
 
     // ✅ DELETE
     @DeleteMapping("/users/{id}")
-    public String deleteUser(@PathVariable Long id) {
+    public ApiResponse<String> deleteUser(@PathVariable Long id) {
+
         userService.deleteUser(id);
-        return "User deleted";
+
+        return new ApiResponse<>(
+                "success",
+                "User deleted successfully",
+                null
+        );
     }
 
     // ✅ UPDATE
     @PutMapping("/users/{id}")
-    public UserDTO updateUser(@PathVariable Long id,
-                             @Valid @RequestBody UserDTO userDTO) {
-        return userService.updateUser(id, userDTO);
+    public ApiResponse<UserDTO> updateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody UserDTO userDTO) {
+
+        UserDTO updatedUser = userService.updateUser(id, userDTO);
+
+        return new ApiResponse<>(
+                "success",
+                "User updated successfully",
+                updatedUser
+        );
     }
 
-    // ✅ 🔥 ADVANCED FILTERING (UPDATED)
+    // 🔥 ADVANCED FILTERING (CLEAN RESPONSE)
     @GetMapping("/users/search")
-    public Page<UserDTO> searchUsers(
-            @RequestParam String name,
+    public ApiResponse<Map<String, Object>> searchUsers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
             Pageable pageable
     ) {
-        return userService.searchUsers(name, pageable);
+
+        Page<UserDTO> result = userService.searchUsers(name, email, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", result.getContent());
+        response.put("totalElements", result.getTotalElements());
+        response.put("totalPages", result.getTotalPages());
+
+        return new ApiResponse<>(
+                "success",
+                "Users fetched successfully",
+                response
+        );
     }
 }
