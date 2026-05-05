@@ -1,56 +1,142 @@
 version: "3.9"
 
-services:
-  # PostgreSQL 15
-  postgres:
-    image: postgres:15-alpine
-    container_name: pci-dss-postgres
-    env_file: .env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+# =============================================================================
+# PCI-DSS Compliance Tracker — Docker Compose
+# All secrets / ports are read from the .env file (copy .env.example → .env)
+# =============================================================================
 
-  # Redis 7
-  redis:
-    image: redis:7-alpine
-    container_name: pci-dss-redis
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-
-  # Spring Boot Backend
-  backend:
-    build: ./backend
-    container_name: pci-dss-backend
-    env_file: .env
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
-    depends_on:
-      - postgres
-      - redis
-
-  # Flask AI Service
-  ai-service:
-    build: ./ai-service
-    container_name: pci-dss-ai-service
-    env_file: .env
-    ports:
-      - "5000:5000"
-    depends_on:
-      - backend
-
-  # React + Vite Frontend
-  frontend:
-    build: ./frontend
-    container_name: pci-dss-frontend
-    ports:
-      - "5173:5173"
-    depends_on:
-      - backend
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+  redis_data:
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 15
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15
+    container_name: pci-dss-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Redis 7
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pci-dss-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Spring Boot Backend
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pci-dss-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # JWT
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRY_MS: ${JWT_EXPIRY_MS}
+      APP_JWT_REFRESH_EXPIRY_MS: ${REFRESH_TOKEN_EXPIRY_MS}
+      # Mail
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      APP_MAIL_FROM: ${MAIL_FROM}
+      # AI Service
+      APP_AI_SERVICE_URL: ${AI_SERVICE_URL}
+      # Scheduler
+      APP_SCHEDULER_ADMIN_EMAIL: ${SCHEDULER_ADMIN_EMAIL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # Python / Flask AI Service
+  # ---------------------------------------------------------------------------
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: pci-dss-ai-service
+    restart: unless-stopped
+    ports:
+      - "${AI_PORT}:5000"
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      CHROMA_PATH: ${CHROMA_PATH}
+      MODEL_NAME: ${MODEL_NAME}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---------------------------------------------------------------------------
+  # React + Vite Frontend (served by Nginx)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pci-dss-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network

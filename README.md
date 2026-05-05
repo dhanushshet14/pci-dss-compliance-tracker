@@ -59,23 +59,89 @@ pci-dss-compliance-tracker/
 
 ### Prerequisites
 
-- Java 17+
-- Node.js 18+
-- Python 3.11+
-- PostgreSQL 15
-- Redis 7
-- Docker & Docker Compose (optional)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (includes Docker Compose v2)
+- Git
 
-### Setup
+---
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in the values
-3. Run with Docker Compose:
-   ```bash
-   docker-compose up --build
-   ```
+## 🚀 Quick Start
 
-   Or run each service individually — see each subfolder for instructions.
+### 1 — Clone and configure
+
+```bash
+git clone https://github.com/dhanushshet14/pci-dss-compliance-tracker.git
+cd pci-dss-compliance-tracker
+
+# Copy the example env file and fill in your values
+cp .env.example .env
+```
+
+Open `.env` and replace every `change_me_*` placeholder with real values:
+
+| Variable | Description |
+|----------|-------------|
+| `POSTGRES_PASSWORD` | Strong password for the PostgreSQL superuser |
+| `REDIS_PASSWORD` | Password for the Redis instance |
+| `JWT_SECRET` | Random string ≥ 32 characters for signing JWTs |
+| `GROQ_API_KEY` | Your Groq cloud API key |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | SMTP credentials for email alerts |
+
+### 2 — Build and start all services
+
+```bash
+docker-compose up --build
+```
+
+Docker Compose will start the five services in dependency order:
+
+```
+postgres (healthy) ─┐
+                    ├─► backend (healthy) ─► frontend
+redis   (healthy) ─┘
+                         ai-service (independent)
+```
+
+### 3 — Verify all services are healthy
+
+```bash
+# List all running containers and their status
+docker-compose ps
+
+# Check backend health endpoint
+curl http://localhost:8080/actuator/health
+
+# Check AI service health endpoint
+curl http://localhost:5000/health
+
+# Open the frontend in your browser
+open http://localhost          # Linux/macOS
+start http://localhost         # Windows
+```
+
+Expected output from `docker-compose ps`:
+
+```
+NAME                   STATUS
+pci-dss-postgres       Up (healthy)
+pci-dss-redis          Up (healthy)
+pci-dss-backend        Up (healthy)
+pci-dss-ai-service     Up (healthy)
+pci-dss-frontend       Up
+```
+
+### 4 — Reset (wipe all data and rebuild)
+
+```bash
+# Stop containers AND remove all named volumes (database data, redis data)
+docker-compose down -v
+
+# Rebuild images from scratch and restart
+docker-compose up --build
+```
+
+> ⚠️ `down -v` permanently deletes all persisted data. Use only when you want a clean slate.
+
+---
 
 ## License
 
