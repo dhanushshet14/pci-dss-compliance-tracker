@@ -283,7 +283,7 @@ class ComplianceRecordControllerTest extends BaseControllerTest {
             mockMvc.perform(get(BASE_URL + "/export/csv")
                             .header("Authorization", buildAuthHeader(generateAdminToken())))
                     .andExpect(status().isOk())
-                    .andExpect(content().contentType("text/csv"))
+                    .andExpect(content().contentType("text/csv;charset=UTF-8"))
                     .andExpect(header().string("Content-Disposition",
                             org.hamcrest.Matchers.containsString("compliance_records_")));
         }

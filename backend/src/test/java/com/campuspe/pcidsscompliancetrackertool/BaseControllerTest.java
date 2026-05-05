@@ -5,7 +5,9 @@ import com.campuspe.pcidsscompliancetrackertool.repository.ComplianceRecordRepos
 import com.campuspe.pcidsscompliancetrackertool.repository.UserRepository;
 import com.campuspe.pcidsscompliancetrackertool.security.JwtUtil;
 import com.campuspe.pcidsscompliancetrackertool.service.ComplianceRecordService;
+import com.campuspe.pcidsscompliancetrackertool.service.TokenBlacklistService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,6 +65,12 @@ public abstract class BaseControllerTest {
 
     @MockBean
     protected JavaMailSender javaMailSender;
+
+    @MockBean
+    protected StringRedisTemplate stringRedisTemplate;
+
+    @MockBean
+    protected TokenBlacklistService tokenBlacklistService;
 
     // ── Token helpers ────────────────────────────────────────────────────────
 

@@ -3,6 +3,7 @@ package com.campuspe.pcidsscompliancetrackertool.repository;
 import com.campuspe.pcidsscompliancetrackertool.entity.ComplianceRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +26,9 @@ public interface ComplianceRecordRepository extends JpaRepository<ComplianceReco
 
     List<ComplianceRecord> findByDueDateBetween(LocalDate startDate, LocalDate endDate);
 
+    // BUG-4 FIX: @EntityGraph fetches all associations in a single LEFT JOIN query,
+    // eliminating the N+1 problem (one extra SELECT per record) visible with show-sql=true.
+    @EntityGraph(attributePaths = {})
     @Query("SELECT c FROM ComplianceRecord c WHERE c.isDeleted = false")
     Page<ComplianceRecord> findAllActiveRecords(Pageable pageable);
 
@@ -42,6 +46,7 @@ public interface ComplianceRecordRepository extends JpaRepository<ComplianceReco
            "AND (LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
            "OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
            "OR LOWER(c.requirementId) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    @EntityGraph(attributePaths = {})
     Page<ComplianceRecord> searchByKeywordPaginated(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT COUNT(c) FROM ComplianceRecord c " +

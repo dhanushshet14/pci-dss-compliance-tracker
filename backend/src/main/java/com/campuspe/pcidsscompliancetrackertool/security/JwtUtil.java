@@ -9,6 +9,8 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Utility class for creating and validating JSON Web Tokens (JWT).
@@ -87,6 +89,19 @@ public class JwtUtil {
     }
 
     // ── Claim extraction ──────────────────────────────────────────────────────
+
+    /**
+     * Returns the remaining validity window of the token as a {@link Duration}.
+     * Used by the logout flow to set the Redis TTL on the blacklisted token entry.
+     *
+     * @param token signed JWT string
+     * @return positive duration if the token is still valid; {@link Duration#ZERO} if expired
+     */
+    public Duration extractRemainingTtl(String token) {
+        Date expiry = parseClaims(token).getExpiration();
+        Duration remaining = Duration.between(Instant.now(), expiry.toInstant());
+        return remaining.isNegative() ? Duration.ZERO : remaining;
+    }
 
     /**
      * Extracts the username (subject) from a valid JWT.

@@ -1,11 +1,23 @@
 package com.campuspe.pcidsscompliancetrackertool.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * BUG-3 FIX:
+ * @SQLDelete — Hibernate intercepts every repository.delete() / deleteById()
+ *   call and executes a soft-delete UPDATE instead of a physical DELETE.
+ * @SQLRestriction — appends "is_deleted = false" to EVERY generated SELECT
+ *   for this entity, so no deleted record can leak into results or CSV export.
+ *   (This replaces the Hibernate 5 @Where annotation in Hibernate 6 / Spring Boot 3.x)
+ */
+@SQLDelete(sql = "UPDATE compliance_records SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Entity
 @Table(name = "compliance_records")
 public class ComplianceRecord {

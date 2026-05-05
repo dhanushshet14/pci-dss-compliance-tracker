@@ -5,12 +5,14 @@ import com.campuspe.pcidsscompliancetrackertool.entity.User;
 import com.campuspe.pcidsscompliancetrackertool.entity.Role;
 import com.campuspe.pcidsscompliancetrackertool.repository.UserRepository;
 import com.campuspe.pcidsscompliancetrackertool.security.JwtUtil;
+import com.campuspe.pcidsscompliancetrackertool.service.TokenBlacklistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,7 @@ public class AuthController {
     private final UserRepository       userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtil               jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // ── Configuration values (injected from application.yml) ─────────────────
 
@@ -65,10 +68,12 @@ public class AuthController {
      */
     public AuthController(UserRepository userRepository,
                           BCryptPasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
-        this.userRepository  = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil         = jwtUtil;
+                          JwtUtil jwtUtil,
+                          TokenBlacklistService tokenBlacklistService) {
+        this.userRepository       = userRepository;
+        this.passwordEncoder      = passwordEncoder;
+        this.jwtUtil              = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     // ── POST /auth/login ──────────────────────────────────────────────────────
@@ -219,5 +224,52 @@ public class AuthController {
         String newAccess   = jwtUtil.generateToken(username, List.of(roleStr));
 
         return ResponseEntity.ok(new AuthResponseDto(newAccess, null, expirySeconds, roleStr));
+    }
+
+    // ── POST /auth/logout ─────────────────────────────────────────────────────────────
+
+    /**
+     * Logs out the current user by invalidating the supplied JWT access token.
+     *
+     * <p>BUG-5 FIX: Without a server-side blacklist, a JWT remains valid until
+     * it expires even after the client discards it.  This endpoint extracts the
+     * token from the {@code Authorization} header, stores it in Redis with a TTL
+     * equal to its remaining validity window, and returns {@code 204 No Content}.
+     * {@link com.campuspe.pcidsscompliancetrackertool.security.JwtAuthFilter}
+     * checks the blacklist on every subsequent request so the revoked token is
+     * immediately rejected.</p>
+     *
+     * @param request the incoming HTTP request (used to read the Authorization header)
+     * @return {@code 204 No Content} on success,
+     *         {@code 400 Bad Request} if no valid Bearer token is present
+     */
+    @Operation(
+        summary     = "Logout",
+        description = "Invalidates the current JWT access token by adding it to a Redis blacklist. " +
+                      "The token is rejected on all subsequent requests until its natural expiry."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Logged out successfully"),
+        @ApiResponse(responseCode = "400", description = "Missing or malformed Authorization header")
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity
+                .badRequest()
+                .body(new ErrorResponse(400, "Bad Request", "Missing or malformed Authorization header."));
+        }
+
+        String token = authHeader.substring(7);
+
+        if (!jwtUtil.validateToken(token)) {
+            // Token is already expired — nothing to blacklist
+            return ResponseEntity.noContent().build();
+        }
+
+        tokenBlacklistService.blacklist(token, jwtUtil.extractRemainingTtl(token));
+        return ResponseEntity.noContent().build();
     }
 }

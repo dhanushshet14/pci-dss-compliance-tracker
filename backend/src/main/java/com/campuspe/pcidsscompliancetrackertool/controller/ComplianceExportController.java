@@ -71,12 +71,20 @@ public class ComplianceExportController {
         String dateStamp = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         String filename = "compliance_records_" + dateStamp + ".csv";
 
-        response.setContentType("text/csv");
+        response.setContentType("text/csv; charset=UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
-        try (CSVPrinter csvPrinter = new CSVPrinter(
+        try {
+            // BUG-6 FIX: Write a UTF-8 BOM (EF BB BF) so that Microsoft Excel
+            // detects the encoding automatically. Without this, non-ASCII
+            // characters (accented names, currency symbols, etc.) display
+            // as garbled text when the file is opened in Excel on Windows.
+            response.getOutputStream().write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
+            response.getOutputStream().flush();
+
+            CSVPrinter csvPrinter = new CSVPrinter(
                 response.getWriter(),
-                CSVFormat.DEFAULT.builder().setHeader(CSV_HEADERS).build())) {
+                CSVFormat.DEFAULT.builder().setHeader(CSV_HEADERS).build());
 
             List<ComplianceRecord> records = complianceRecordService.getAllForExport();
 
