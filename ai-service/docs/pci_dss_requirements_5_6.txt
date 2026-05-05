@@ -1,0 +1,19 @@
+PCI-DSS Requirements 5 and 6 — Vulnerability Management
+
+Requirement 5.1 — Antivirus Software
+Antivirus software must be deployed on all systems commonly affected by malicious software. All antivirus mechanisms must be kept current and must generate audit logs. Antivirus software must be actively running and cannot be disabled by users.
+
+Requirement 5.2 — Antivirus Updates
+All antivirus mechanisms must be kept current and must include latest virus signatures. Antivirus scans must be performed on a regular basis. Antivirus software must be capable of detecting known types of malicious software including viruses, trojans, worms, and spyware.
+
+Requirement 6.1 — Patch Management
+A process must be in place to identify security vulnerabilities using reputable outside sources. All systems must be protected from known vulnerabilities by installing applicable security patches. Critical patches must be installed within one month of release.
+
+Requirement 6.2 — Vulnerability Rankings
+All system components and software must be protected from known vulnerabilities. Security vulnerabilities must be ranked according to industry best practices. Organizations must use a risk ranking process to prioritize vulnerabilities.
+
+Requirement 6.3 — Secure Development
+All web-facing applications must be developed based on secure coding guidelines. Code reviews must be performed for all custom application code changes. Web applications must be protected against known attacks including injection flaws and cross-site scripting.
+
+Requirement 6.4 — Change Control
+All changes to system components must follow a formal change control procedure. Changes must be tested before deployment to production. Back-out procedures must be documented and tested for all changes.

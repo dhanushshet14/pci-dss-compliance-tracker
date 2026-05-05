@@ -1,0 +1,35 @@
+PCI-DSS Requirement 1 — Install and Maintain Network Security Controls
+Organizations must install and maintain network security controls to protect the cardholder data environment. Firewalls and routers must be configured to restrict inbound and outbound traffic to only that which is necessary. Firewall configurations must be reviewed at least every six months. All connections to and from the cardholder data environment must be documented and approved.
+
+PCI-DSS Requirement 2 — Apply Secure Configurations to All System Components
+Default passwords and security parameters must be changed before deploying any system component into the network. All unnecessary services, protocols, and ports must be disabled. System configuration standards must be developed and implemented for all system components. Vendor-supplied defaults must never be used for system passwords or security parameters.
+
+PCI-DSS Requirement 3 — Protect Stored Account Data
+Sensitive authentication data must not be stored after authorization. The primary account number must be rendered unreadable using strong cryptography. Cardholder data storage must be kept to a minimum and a data retention policy must be implemented. Plain text storage of cardholder data is strictly prohibited under PCI-DSS standards.
+
+PCI-DSS Requirement 4 — Protect Cardholder Data with Strong Cryptography During Transmission
+Strong cryptography must be used to safeguard cardholder data during transmission over open public networks. SSL and early TLS must not be used as security controls. Only trusted certificates must be accepted. TLS 1.2 or higher is required for all transmissions of cardholder data.
+
+PCI-DSS Requirement 5 — Protect All Systems and Networks from Malicious Software
+Antivirus software must be deployed on all systems commonly affected by malicious software. All antivirus mechanisms must be kept current and actively running. Anti-malware solutions must be evaluated periodically for systems not commonly affected by malware. Phishing awareness training must be provided to personnel.
+
+PCI-DSS Requirement 6 — Develop and Maintain Secure Systems and Software
+Security vulnerabilities must be identified and ranked. Critical patches must be installed within one month of release. All public-facing web applications must be protected against known attacks. A software development lifecycle that includes security must be followed for all custom-developed software.
+
+PCI-DSS Requirement 7 — Restrict Access to System Components and Cardholder Data by Business Need to Know
+Access to system components and cardholder data must be limited to only those individuals whose job requires such access. Access control systems must be in place and deny all access by default. All access rights must be documented and approved by authorized personnel.
+
+PCI-DSS Requirement 8 — Identify Users and Authenticate Access to System Components
+A unique ID must be assigned to each person with computer access. Group or shared IDs must not be used. Multi-factor authentication must be implemented for all access to the cardholder data environment. Passwords must meet minimum complexity requirements and must be changed at least every 90 days.
+
+PCI-DSS Requirement 9 — Restrict Physical Access to Cardholder Data
+Physical access to systems in the cardholder data environment must be restricted. All physical access must be logged and monitored. Media containing cardholder data must be classified and handled securely. Destruction of media must render cardholder data unrecoverable.
+
+PCI-DSS Requirement 10 — Log and Monitor All Access to System Components and Cardholder Data
+Audit logs must be implemented to track and monitor all access. Logs must be retained for at least 12 months with at least 3 months available for immediate analysis. Log data must be protected from modification. Automated mechanisms must be used to review logs daily.
+
+PCI-DSS Requirement 11 — Test Security of Systems and Networks Regularly
+Vulnerability scans must be performed at least quarterly. Penetration testing must be performed at least annually. Intrusion detection systems must be implemented. Wireless access points must be scanned quarterly to detect unauthorized access points.
+
+PCI-DSS Requirement 12 — Support Information Security with Organizational Policies and Programs
+A security policy must be established and maintained. Risk assessments must be performed at least annually. Security awareness training must be provided to all personnel. An incident response plan must be maintained and tested annually.
